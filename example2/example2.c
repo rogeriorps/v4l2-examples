@@ -57,7 +57,8 @@ int fd_capture_v4l = 0;
 int fd_output_v4l = 0;
 int g_cap_mode = 0;
 int g_input = 1;
-int g_fmt = V4L2_PIX_FMT_UYVY;
+int g_fmt_in = V4L2_PIX_FMT_UYVY; // IPU_PIX_FMT_RGB32;
+int g_fmt_out = V4L2_PIX_FMT_UYVY; //V4L2_PIX_FMT_RGB32;
 int g_rotate = 0;
 int g_vflip = 0;
 int g_hflip = 0;
@@ -221,7 +222,7 @@ int v4l_capture_setup(void)
 	fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	fmt.fmt.pix.width       = 0;
 	fmt.fmt.pix.height      = 0;
-	fmt.fmt.pix.pixelformat = g_fmt;
+	fmt.fmt.pix.pixelformat = g_fmt_in;
 	fmt.fmt.pix.field       = V4L2_FIELD_NONE;//V4L2_FIELD_INTERLACED;
 
 	if (ioctl (fd_capture_v4l, VIDIOC_S_FMT, &fmt) < 0){
@@ -305,7 +306,7 @@ int v4l_output_setup(void)
 	fmt.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 	fmt.fmt.pix.width= g_in_width;
 	fmt.fmt.pix.height= g_in_height;
-	fmt.fmt.pix.pixelformat = g_fmt;
+	fmt.fmt.pix.pixelformat = g_fmt_out;
 	fmt.fmt.pix.bytesperline = g_in_width;
 	fmt.fmt.pix.priv = 0;
 	fmt.fmt.pix.sizeimage = 0;
@@ -347,6 +348,10 @@ mxc_v4l_tvin_test(void)
 	int total_time;
 	struct timeval tv_start, tv_current;
 
+	unsigned char *buf_test;
+	buf_test = (unsigned char *) malloc (g_frame_size);
+
+
 	if (prepare_output() < 0)
 	{
 		printf("prepare_output failed\n");
@@ -373,7 +378,6 @@ mxc_v4l_tvin_test(void)
 		output_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 		output_buf.memory = V4L2_MEMORY_MMAP;
 		if (i < g_output_num_buffers) {
-			printf ("\nQuerybuffer = %d",i);
 			output_buf.index = i;
 			if (ioctl(fd_output_v4l, VIDIOC_QUERYBUF, &output_buf) < 0)
 			{
@@ -381,7 +385,6 @@ mxc_v4l_tvin_test(void)
 				return TFAIL;
 			}
 		} else {
-			printf ("\nDeQueuebuffer = %d",i);
 			output_buf.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
 			output_buf.memory = V4L2_MEMORY_MMAP;
 			if (ioctl(fd_output_v4l, VIDIOC_DQBUF, &output_buf) < 0)
@@ -391,10 +394,39 @@ mxc_v4l_tvin_test(void)
 			}
 		}
 
-		printf ("\noutput index = %d", output_buf.index);
-		printf ("\ncapture index = %d", capture_buf.index);
+//		printf ("\noutput index = %d", output_buf.index);
+//		printf ("\ncapture index = %d", capture_buf.index);
 		
-		memcpy(output_buffers[output_buf.index].start, capture_buffers[capture_buf.index].start, g_frame_size);
+
+//		unsigned char *ptr_test;
+		
+//		ptr_test = &output_buffers[output_buf.index].start;
+
+	
+//		memcpy(*ptr_test, capture_buffers[capture_buf.index].start, g_frame_size);
+		
+
+
+		memcpy(buf_test, capture_buffers[capture_buf.index].start, g_frame_size);
+//---------------------------------------------------------
+/*		int j;
+		char a;
+		char b;
+		for (j = 0; j < g_frame_size; j++)
+		{		
+			a = buf_test[(j * 2) + 1];
+			b = a & 0xe0;
+			
+			buf_test[(j * 2) + 1] = b;
+		}
+*/		
+
+//--------------------------------
+
+		memcpy(output_buffers[output_buf.index].start, buf_test, g_frame_size);
+
+
+
 		if (ioctl(fd_capture_v4l, VIDIOC_QBUF, &capture_buf) < 0) {
 			printf("VIDIOC_QBUF failed\n");
 			return TFAIL;
@@ -421,6 +453,7 @@ mxc_v4l_tvin_test(void)
 	total_time += tv_current.tv_usec - tv_start.tv_usec;
 	printf("total time for %u frames = %u us =  %lld fps\n", i, total_time, (i * 1000000ULL) / total_time);
 
+	free (buf_test);
 	return 0;
 }
 
