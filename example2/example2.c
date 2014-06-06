@@ -57,8 +57,8 @@ int fd_capture_v4l = 0;
 int fd_output_v4l = 0;
 int g_cap_mode = 0;
 int g_input = 1;
-int g_fmt_in = V4L2_PIX_FMT_UYVY; // IPU_PIX_FMT_RGB32;
-int g_fmt_out = V4L2_PIX_FMT_UYVY; //V4L2_PIX_FMT_RGB32;
+int g_fmt_in = V4L2_PIX_FMT_UYVY;
+int g_fmt_out = V4L2_PIX_FMT_UYVY;
 int g_rotate = 0;
 int g_vflip = 0;
 int g_hflip = 0;
@@ -76,7 +76,7 @@ int g_display_top = 0;
 int g_display_left = 0;
 int g_frame_size;
 int g_frame_period = 33333;
-v4l2_std_id g_current_std = V4L2_STD_UNKNOWN; //V4L2_STD_NTSC;
+v4l2_std_id g_current_std = V4L2_STD_UNKNOWN;
 
 struct testbuffer
 {
@@ -223,7 +223,7 @@ int v4l_capture_setup(void)
 	fmt.fmt.pix.width       = 0;
 	fmt.fmt.pix.height      = 0;
 	fmt.fmt.pix.pixelformat = g_fmt_in;
-	fmt.fmt.pix.field       = V4L2_FIELD_NONE;//V4L2_FIELD_INTERLACED;
+	fmt.fmt.pix.field       = V4L2_FIELD_NONE;
 
 	if (ioctl (fd_capture_v4l, VIDIOC_S_FMT, &fmt) < 0){
 		fprintf (stderr, "%s iformat not supported \n",
@@ -394,34 +394,7 @@ mxc_v4l_tvin_test(void)
 			}
 		}
 
-//		printf ("\noutput index = %d", output_buf.index);
-//		printf ("\ncapture index = %d", capture_buf.index);
-		
-
-//		unsigned char *ptr_test;
-		
-//		ptr_test = &output_buffers[output_buf.index].start;
-
-	
-//		memcpy(*ptr_test, capture_buffers[capture_buf.index].start, g_frame_size);
-		
-
-
 		memcpy(buf_test, capture_buffers[capture_buf.index].start, g_frame_size);
-//---------------------------------------------------------
-/*		int j;
-		char a;
-		char b;
-		for (j = 0; j < g_frame_size; j++)
-		{		
-			a = buf_test[(j * 2) + 1];
-			b = a & 0xe0;
-			
-			buf_test[(j * 2) + 1] = b;
-		}
-*/		
-
-//--------------------------------
 
 		memcpy(output_buffers[output_buf.index].start, buf_test, g_frame_size);
 
