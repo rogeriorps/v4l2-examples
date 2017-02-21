@@ -172,6 +172,7 @@ int v4l_capture_setup(void)
 	struct v4l2_streamparm parm;
 	v4l2_std_id id;
 	unsigned int min;
+	int retval;
 
 	if (ioctl(fd_capture_v4l, VIDIOC_S_INPUT, &g_input) < 0)
 	{
@@ -233,17 +234,19 @@ int v4l_capture_setup(void)
 	if (fmt.fmt.pix.sizeimage < min)
 		fmt.fmt.pix.sizeimage = min;
 
-	if (ioctl(fd_capture_v4l, VIDIOC_G_FMT, &fmt) < 0)
+	retval = ioctl(fd_capture_v4l, VIDIOC_G_FMT, &fmt);
+	if (retval < 0)
 	{
-		printf("VIDIOC_G_FMT failed\n");
+		printf("VIDIOC_G_FMT failed, retval = %x\n", retval);
 		close(fd_capture_v4l);
 		return TFAIL;
+	}
+	else{
+		printf("VIDIOC_G_FMT OK - fmt.fmt.pix.width = %d\n", fmt.fmt.pix.width);
 	}
 
 	g_in_width = fmt.fmt.pix.width;
 	g_in_height = fmt.fmt.pix.height;
-
-	printf("VIDIOC_G_FMT failed\n");
 
 	memset(&req, 0, sizeof (req));
 
